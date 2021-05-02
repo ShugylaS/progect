@@ -6,6 +6,53 @@ drive.mount("/content/drive/",force_remount=True)
 import requests 
 from bs4 import BeautifulSoup
 
+#Указываем путь к нашей папке
+path = r"/content/drive/My Drive/CSS/"
+
+#с помощью try,except перерабатываем данные
+with open(path + 'result.csv', 'w', encoding='utf-8') as file:
+  file.write("Названия,Цена,Ссылка на товар,Рейтинг,Код товара\n")#Пишем названия данных
+
+def get_data(pages):  
+  result = ''
+  numb = 0
+  for i in range(1, pages+1):
+    url = f'https://www.sulpak.kz/f/smartfoniy?page={i}'
+    r = requests.get(url = url).text
+    soup = BeautifulSoup(r, 'lxml')
+
+    links = soup.find_all('div', class_='product-container-right-side')
+    for link in links:
+      url = f'https://www.sulpak.kz{link.find("a").get("href")}'
+      r = requests.get(url = url).text
+      soup = BeautifulSoup(r, 'lxml')
+
+      title = soup.find('h1', class_='product-container-title').text
+      price = soup.find('div', class_='current-price').text
+      link = url  
+      score = soup.find('div', {'id':'write-new-comment'}).previous_sibling.previous_sibling.get('data-score')
+      code = soup.find('div', class_='product-code-container').find('span').text
+      
+      result += f'{title},{price},{link},{score},{code}\n'
+      numb += 1 
+      print(f'Парсим карту - {numb}')
+
+  return result
+
+def save_data():
+  pages = int(input('Enter the number of pages for scrapping: '))
+  result = get_data(pages)
+  print('Парсинг завершён.')
+  with open(path +'result.csv', 'a', encoding='utf-8') as file:
+    file.write(result)
+  exit()
+
+if name == "__main__": #Запускаем код.
+    save_data()
+    
+    
+    import requests 
+from bs4 import BeautifulSoup
 
 try:
   with open(path+'result.csv', 'w', encoding='utf-8') as file:
